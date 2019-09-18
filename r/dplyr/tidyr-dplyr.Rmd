@@ -1,0 +1,131 @@
+---
+title: "tidyr, dplyr"
+output:
+  html_notebook: default
+---
+
+```{r, echo=T}
+# Portal Teaching dataset from http://dx.doi.org/10.6084/m9.figshare.1314459
+library(dplyr)
+library(tidyr)
+plots <- read.csv("~/Documents/extras/github-projects/cheatsheets/r/dplyr/plots.csv")
+species <- read.csv("~/Documents/extras/github-projects/cheatsheets/r/dplyr/species.csv")
+surveys <- read.csv("~/Documents/extras/github-projects/cheatsheets/r/dplyr/surveys.csv", na.strings = "")
+
+```
+
+```{r, echo=T}
+# Tidy Data, as defined by R Developer Hadley Wickham is one where:
+# - Each variable forms a column 
+# - Each observation forms a row
+# - Each type of observational unit forms a table
+
+```
+
+
+```{r, echo=T}
+counts_df <- data.frame(
+  day = c("Monday", "Tuesday", "Wednesday"),
+  wolf = c(2, 1, 3),
+  hare = c(20, 25, 30),
+  fox = c(4, 4, 4)
+)
+counts_df
+```
+
+```{r, echo=T}
+# To reshape multiple columns into category/value pairs 
+# Gather
+library(tidyr)
+counts_gather <- gather(counts_df, key = "species", value = "count", wolf:fox)
+counts_gather
+
+
+```
+
+
+
+
+
+```{r, echo=T}
+library(reshape2)
+counts_gather_2 <- reshape2::melt(data = counts_df,  id.vars = "day")
+counts_gather_2
+```
+
+
+
+```{r, echo=T}
+# spread()
+counts_spread <- spread(counts_gather, key = species, value = count)
+counts_spread
+```
+
+
+
+```{r, echo=T}
+# dcast()
+counts_spread_2 <- dcast(counts_gather,formula = "day ~ species")
+```
+
+
+
+```{r, echo=T}
+# dplyr key functions:
+# 1. Filter: filter rows by criteria
+filter(plots, grepl("^S|^C",plot_type))
+
+```
+
+
+
+```{r, echo=T}
+# 2. Select: select specific columns
+select(plots, plot_type)
+```
+
+
+
+```{r, echo=T}
+# 3. Arrange
+
+arrange(plots, desc(plot_type)) %>% head()
+```
+
+
+
+
+```{r, echo=T}
+# 4. group_by
+
+group_by(surveys, month, year)
+```
+
+
+
+```{r, echo=T}
+# 5. summarize
+
+group_by(surveys, month, year) %>% summarize(count = n()) %>% arrange(year)
+```
+
+
+
+```{r, echo=T}
+# 6. Mutate: Create new columns by performing the same operation on each row.
+mutate(surveys, perc_hindfoot = hindfoot_length/sum(hindfoot_length, na.rm = T))
+```
+
+
+
+```{r, echo=T}
+# 7. Joins
+surveys1990_winter <- filter(surveys, year == 1990, month %in% 1:3) %>% group_by(., species_id) %>% summarize(., count = n())
+head(surveys1990_winter)
+
+counts_1990w_join <- inner_join(surveys1990_winter, species)
+head(counts_1990w_join)
+
+```
+
+
